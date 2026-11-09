@@ -1,81 +1,71 @@
 # Theme Reveal Kit
 
-**Persistent Flutter themes with reveals that expose your real, live app.**
+Persistent light, dark and system themes with reveals from any widget.
 
-![pub.dev: unpublished](https://img.shields.io/badge/pub.dev-unpublished-lightgrey)
-![MIT license](https://img.shields.io/badge/license-MIT-blue)
-![macOS verified](https://img.shields.io/badge/verified-macOS-success)
-![Flutter minimum 3.41](https://img.shields.io/badge/Flutter-%E2%89%A53.41.0-02569B)
-![Dart minimum 3.11](https://img.shields.io/badge/Dart-%E2%89%A53.11.0-0175C2)
+<a href="https://pub.dev/packages/theme_reveal_kit"><img src="https://img.shields.io/pub/v/theme_reveal_kit" alt="pub.dev version" width="90"></a>
+<a href="https://pub.dev/packages/theme_reveal_kit/score"><img src="https://img.shields.io/pub/likes/theme_reveal_kit" alt="pub.dev likes" width="80"></a>
+<a href="https://pub.dev/packages/theme_reveal_kit/score"><img src="https://img.shields.io/pub/points/theme_reveal_kit" alt="pub points" width="90"></a>
+<a href="https://github.com/Ahmedelsapagh10/theme_reveal/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license" width="80"></a>
+<a href="https://pub.dev/packages/theme_reveal_kit"><img src="https://img.shields.io/badge/verified-macOS-success" alt="verified: macOS" width="110"></a>
 
-Local release candidate **0.1.0**; not published to pub.dev. The badge does not
-claim a hosted version. Android, iOS and web are unverified.
+<img src="https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/hero.gif" alt="Circular reveal switching between light and dark themes" width="800">
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/hero.gif" alt="Real macOS Settings button revealing dark to light and back to dark" width="800">
-</p>
+[Install](#install) · [Modes](#pick-your-mode) · [Managed](#managed) ·
+[External](#external) · [Buttons](#buttons-in-screens) · [Shapes](#reveal-shapes) ·
+[Animation](#animation-config) · [Control](#programmatic-control) ·
+[Selector](#lightdarksystem-selector) · [Storage](#custom-storage-and-persistence) ·
+[Troubleshooting](#troubleshooting) · [Platforms](#platform-support)
 
-Made by [Ahmed Elsapagh](https://elsapagh.octopusteam.net/).
+## Install
 
-<details>
-<summary>Contents</summary>
-
-- [Why Theme Reveal Kit](#why-theme-reveal-kit)
-- [Quick start](#quick-start)
-- [Visual gallery](#visual-gallery)
-- [Feature matrix](#feature-matrix)
-- [Cookbook](#cookbook)
-- [Persistence](#persistence)
-- [External state management](#external-state-management)
-- [Three independent concepts](#three-independent-concepts)
-- [Completion strategies](#completion-strategies)
-- [SVG support and JSON schema](#svg-support-and-json-schema)
-- [Accessibility and reduced motion](#accessibility-and-reduced-motion)
-- [Platform support and verification](#platform-support-and-verification)
-- [Limitations](#limitations)
-- [Troubleshooting](#troubleshooting)
-- [Run the example](#run-the-example)
-- [Contributing](#contributing)
-- [About the author](#about-the-author)
-- [License](#license)
-
-</details>
-
-## Why Theme Reveal Kit
-
-- **A circle by default.** Add a button; choose custom masks when you need them.
-- **One live app.** Navigation, scroll and widget state stay mounted beneath the old-frame overlay.
-- **Persistence included.** Restore Light/Dark/System before the first frame.
-- **Your silhouette.** Use vectors, Path, icon glyphs, transparent PNG, SVG or JSON.
-- **Your state model.** Use the controller or an external state-emitting callback.
-
-## Quick start
-
-Requires Flutter **3.41.0+** and Dart **3.11.0+**. While this candidate is
-unpublished, depend on your local checkout:
-
-```yaml
-dependencies:
-  theme_reveal_kit:
-    path: ../theme_reveal
+```sh
+# Add the package to your Flutter app.
+flutter pub add theme_reveal_kit
 ```
 
-Once 0.1.0 is published, replace the path entry with `theme_reveal_kit: ^0.1.0`.
-Run `flutter pub get`, then use this complete `main.dart`:
+Add these imports to screens using the recipes below.
 
+<!-- snippet:imports -->
 ```dart
+// Add these imports to every screen using the recipes below.
+import 'package:flutter/material.dart';
+import 'package:theme_reveal_kit/theme_reveal_kit.dart';
+```
+
+The widgets are ready to use with Flutter 3.41.0+ and Dart 3.11.0+.
+
+## Pick your mode
+
+| Your app today | Use |
+| --- | --- |
+| No theme system | Managed |
+| Existing Cubit/Bloc/Provider/Riverpod/GetX/ValueNotifier or saved preference | External |
+
+Never use both: one owner manages your theme and saved preference.
+
+## Managed
+
+Replace `main.dart` with this complete file. Keep all three settings passed to `MaterialApp`.
+
+<!-- snippet:managed -->
+```dart
+// 1) Import Flutter and Theme Reveal Kit.
 import 'package:flutter/material.dart';
 import 'package:theme_reveal_kit/theme_reveal_kit.dart';
 
 Future<void> main() async {
+  // 2) Restore the saved preference before showing the app.
   WidgetsFlutterBinding.ensureInitialized();
   final controller = await RevealThemeController.create();
+  // 3) Keep the controller for the app lifetime; dispose widget-owned controllers.
   runApp(
     RevealThemeBuilder(
       controller: controller,
       builder: (context, settings) => MaterialApp(
+        // YOUR CODE: replace these themes and the home screen.
         theme: ThemeData.light(),
         darkTheme: ThemeData.dark(),
+        // 4) Keep all three settings below.
         themeMode: settings.themeMode,
         themeAnimationDuration: settings.themeAnimationDuration,
         builder: settings.builder,
@@ -88,591 +78,744 @@ Future<void> main() async {
 }
 ```
 
-Tap the moon/sun button.  
-The real app changes theme beneath a circular cutout from the button.  
-Restart the app: its saved theme is restored before the first frame.
+The saved mode appears at startup, and the button switches themes with a circular reveal.
 
-Pass **all three** settings to MaterialApp. The zero duration disables competing
-implicit theme interpolation. This minimal process-lifetime controller is shown
-for startup; dispose controllers you create in a longer-lived widget owner.
+## External
 
-Every Dart block is copied from compiled example sources and checked by
-[the snippet tests](https://github.com/Ahmedelsapagh10/theme_reveal/blob/master/example/test/readme_snippets_test.dart).
+Keep your existing theme state and persistence. Add the viewport and change state inside `onThemeChange`.
 
-## Visual gallery
+### MaterialApp setup
 
-These are recordings of the real macOS example, not mock-ups. The same native
-app and engine drive the screenshots and every GIF. Recorded UI labels identify
-the selected shape/strategy. Persistence uses two real processes with an explicit
-restart edit. The capture cadence is not a performance measurement.
+Use this complete widget file from your existing state builder: pass the current `mode` and your `changeTheme` callback.
 
-| Shapes | Vector SVG silhouette |
-| --- | --- |
-| ![Triangle, star, heart and rounded-rectangle reveals in the real Settings tab](https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/shapes.gif) | ![SVG logo reveal with its actual even-odd hole](https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/logo_svg.gif) |
-| Four vector shapes, one live app. | Filled SVG geometry, including its hole. |
-
-| PNG alpha mask | Completion strategies |
-| --- | --- |
-| ![Transparent PNG logo reveal retaining its real central hole](https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/logo_png.gif) | ![Star mask with labeled preserve, morph and dissolve strategies](https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/strategies.gif) |
-| Actual alpha, including the transparent hole. | Same star; preserve, morph and dissolve. |
-
-| Live Playground | Persistence |
-| --- | --- |
-| ![Changing duration, curve and origin in Playground before a real reveal](https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/playground.gif) | ![Theme saved in one process and restored in a separate process, with restart cut labeled](https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/persistence.gif) |
-| Controls change the real animation config. | Save light, quit the process, relaunch and restore. |
-
-| Home · light | Home · dark | Settings |
-| --- | --- | --- |
-| ![Real Home tab in light mode](https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/home_light.png) | ![Real Home tab in dark mode](https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/home_dark.png) | ![Compact theme button inside the actual Settings layout](https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/settings_tab.png) |
-
-## Feature matrix
-
-| Area | Included | Verified on |
-| --- | --- | --- |
-| Shape sources | 11 vector kinds, custom Path, Icon, SVG, PNG/bytes, JSON | Widget/geometry tests; macOS native subset |
-| Completion | Auto, preserve, growing-circle morph, dissolve, custom callback | macOS: 55 shape/strategy pixel cases |
-| Persistence | Light/Dark/System, serialized writes, legacy bool migration, custom storage | Unit tests; real macOS preferences/relaunch |
-| External mode | Theme-emitting callback, independent of controller | ValueNotifier on macOS; async emitter widget tests |
-| Accessibility | Labels, keyboard, focus, 48px target, RTL, text scaling, motion policy | Widget tests; live VoiceOver unverified |
-
-## Cookbook
-
-The following functions use the two quick-start imports. Button decoration,
-decorative logo and reveal mask are separate choices.
-
-### Default circle
-
+<!-- snippet:external_setup -->
 ```dart
-Widget circularButton(RevealThemeController controller) =>
-    RevealThemeButton(controller: controller);
+// 1) Import Flutter and the reveal widgets.
+import 'package:flutter/material.dart';
+import 'package:theme_reveal_kit/theme_reveal_kit.dart';
+
+// 2) Pass your current state and update callback from your state builder.
+class ExternalThemeApp extends StatelessWidget {
+  const ExternalThemeApp({
+    super.key,
+    required this.mode,
+    required this.changeTheme,
+  });
+  final ThemeMode mode;
+  final VoidCallback changeTheme;
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+    // YOUR CODE: supply your themes and home screen.
+    theme: ThemeData.light(),
+    darkTheme: ThemeData.dark(),
+    themeMode: mode,
+    // 3) Keep zero duration and the viewport builder.
+    themeAnimationDuration: Duration.zero,
+    builder: (context, child) => ThemeRevealViewport(child: child!),
+    home: Scaffold(
+      body: Builder(
+        builder: (buttonContext) => FilledButton(
+          // 4) Change existing state only inside this callback.
+          onPressed: () => ThemeRevealViewport.of(
+            buttonContext,
+          ).reveal(from: buttonContext, onThemeChange: changeTheme),
+          child: const Text('Change theme'),
+        ),
+      ),
+    ),
+  );
+}
 ```
-![Default circular reveal from the Settings button](https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/hero.gif)
 
-### Triangle or star
+Your existing state chooses the theme; the button adds the reveal.
 
+### Button in an existing screen
+
+Put this below your viewport. Replace `changeTheme` with the callback that updates your current state.
+
+<!-- snippet:external_button -->
 ```dart
-Widget starButton(RevealThemeController controller) => RevealThemeButton(
+// Put this button below ThemeRevealViewport in your home screen.
+// YOUR CODE: changeTheme updates your existing theme state.
+Builder(
+  builder: (buttonContext) => FilledButton(
+    onPressed: () => ThemeRevealViewport.of(
+      buttonContext,
+    ).reveal(from: buttonContext, onThemeChange: changeTheme),
+    child: const Text('Change theme'),
+  ),
+)
+```
+
+The state changes only when the reveal request is accepted.
+
+### Cubit app
+
+Add [flutter_bloc](https://pub.dev/packages/flutter_bloc) to your app, then use this complete `main.dart`.
+
+<!-- snippet:cubit -->
+```dart
+// 1) Import flutter_bloc along with Flutter and Theme Reveal Kit.
+import 'package:flutter/material.dart';
+import 'package:theme_reveal_kit/theme_reveal_kit.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+void main() => runApp(const CubitThemeApp());
+
+class ThemeCubit extends Cubit<ThemeMode> {
+  ThemeCubit() : super(ThemeMode.system);
+  // YOUR CODE: keep your existing persistence when emitting a new preference.
+  void toggle() =>
+      emit(state == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark);
+}
+
+class CubitThemeApp extends StatelessWidget {
+  const CubitThemeApp({super.key});
+  @override
+  Widget build(BuildContext context) => BlocProvider(
+    // 2) BlocProvider owns and closes this Cubit.
+    create: (_) => ThemeCubit(),
+    child: BlocBuilder<ThemeCubit, ThemeMode>(
+      builder: (context, mode) => MaterialApp(
+        // YOUR CODE: replace themes and screen content.
+        theme: ThemeData.light(),
+        darkTheme: ThemeData.dark(),
+        themeMode: mode,
+        // 3) Keep the viewport and zero theme animation duration.
+        themeAnimationDuration: Duration.zero,
+        builder: (context, child) => ThemeRevealViewport(child: child!),
+        home: Scaffold(
+          body: Builder(
+            builder: (buttonContext) => FilledButton(
+              // 4) Emit only inside the accepted theme change callback.
+              onPressed: () => ThemeRevealViewport.of(buttonContext).reveal(
+                from: buttonContext,
+                onThemeChange: () => buttonContext.read<ThemeCubit>().toggle(),
+              ),
+              child: const Text('Change theme'),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+```
+
+The Cubit emits light or dark inside the reveal callback, and BlocBuilder updates the app.
+
+### ValueNotifier app
+
+Use this complete `main.dart` when a ValueNotifier owns your theme.
+
+<!-- snippet:notifier -->
+```dart
+// 1) Import the widgets and start the app.
+import 'package:flutter/material.dart';
+import 'package:theme_reveal_kit/theme_reveal_kit.dart';
+
+void main() => runApp(const NotifierThemeApp());
+
+class NotifierThemeApp extends StatefulWidget {
+  const NotifierThemeApp({super.key});
+  @override
+  State<NotifierThemeApp> createState() => _NotifierThemeAppState();
+}
+
+class _NotifierThemeAppState extends State<NotifierThemeApp> {
+  // 2) This notifier owns the preference; add your persistence here if needed.
+  final mode = ValueNotifier(ThemeMode.system);
+  @override
+  void dispose() {
+    mode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder(
+    valueListenable: mode,
+    builder: (context, value, _) => MaterialApp(
+      // YOUR CODE: replace the themes and screen content.
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      themeMode: value,
+      // 3) Keep the viewport and disable competing theme interpolation.
+      themeAnimationDuration: Duration.zero,
+      builder: (context, child) => ThemeRevealViewport(child: child!),
+      home: Scaffold(
+        body: Builder(
+          builder: (buttonContext) => FilledButton(
+            // 4) Update the notifier only inside onThemeChange.
+            onPressed: () => ThemeRevealViewport.of(buttonContext).reveal(
+              from: buttonContext,
+              onThemeChange: () => mode.value = value == ThemeMode.dark
+                  ? ThemeMode.light
+                  : ThemeMode.dark,
+            ),
+            child: const Text('Change theme'),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+```
+
+The app changes theme through the notifier and disposes it when the widget is removed.
+
+### Migrating an existing app
+
+1. Keep your existing theme state and saved preference.
+2. Bind that state to `MaterialApp.themeMode` and supply both themes.
+3. Install `ThemeRevealViewport` in `MaterialApp.builder` and set `themeAnimationDuration: Duration.zero`.
+4. Move your state update inside `onThemeChange`, using a context below the viewport.
+5. Remove competing theme animations; keep the managed controller and builder out of this integration.
+
+## Buttons in screens
+
+Use the controller created in managed `main.dart`.
+
+### Settings page
+
+Add this complete widget file and open `SettingsPage(controller: controller)` below your managed MaterialApp.
+
+<!-- snippet:settings -->
+```dart
+// 1) Use the controller restored in your managed main.dart.
+import 'package:flutter/material.dart';
+import 'package:theme_reveal_kit/theme_reveal_kit.dart';
+
+class SettingsPage extends StatelessWidget {
+  const SettingsPage({super.key, required this.controller});
+  final RevealThemeController controller;
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    // YOUR CODE: replace the title and add your other settings.
+    appBar: AppBar(title: const Text('Settings')),
+    body: ListTile(
+      title: const Text('Appearance'),
+      // 2) Keep this page below the managed MaterialApp.
+      trailing: RevealThemeButton(controller: controller),
+    ),
+  );
+}
+```
+
+The Appearance row switches themes without leaving Settings.
+
+### AppBar action
+
+Use this Scaffold as your screen.
+
+<!-- snippet:appbar -->
+```dart
+// Put this in your screen below the managed MaterialApp.
+// controller is the one you created in main().
+Scaffold(
+  appBar: AppBar(
+    title: const Text('Home'),
+    actions: [RevealThemeButton(controller: controller)],
+  ),
+  body: const Center(child: Text('Welcome')),
+)
+```
+
+The action reveals from the app bar.
+
+### Drawer tile
+
+Use this Scaffold as your screen and open its drawer.
+
+<!-- snippet:drawer -->
+```dart
+// Put this in your screen below the managed MaterialApp.
+// controller is the one you created in main().
+Scaffold(
+  appBar: AppBar(title: const Text('Home')),
+  drawer: Drawer(
+    child: SafeArea(
+      child: ListTile(
+        title: const Text('Appearance'),
+        trailing: RevealThemeButton(controller: controller),
+      ),
+    ),
+  ),
+  body: const Center(child: Text('Open the drawer')),
+)
+```
+
+The drawer contains an Appearance toggle.
+
+### Floating position
+
+Use this Scaffold as your screen.
+
+<!-- snippet:floating -->
+```dart
+// Put this in your screen below the managed MaterialApp.
+// controller is the one you created in main().
+Scaffold(
+  body: const Center(child: Text('Home')),
+  floatingActionButton: RevealThemeButton(controller: controller),
+  floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+)
+```
+
+The theme toggle floats at the bottom end.
+
+### Any custom widget
+
+Put this where your custom theme control belongs.
+
+<!-- snippet:trigger -->
+```dart
+// Put this in your screen below the managed MaterialApp.
+// controller is the one you created in main().
+RevealThemeTrigger(
+  controller: controller,
+  semanticLabel: 'Change appearance',
+  child: const Chip(avatar: Icon(Icons.contrast), label: Text('Appearance')),
+)
+```
+
+The chip supports tap, keyboard and screen-reader activation.
+
+## Reveal shapes
+
+Put any of these widgets below your managed MaterialApp; reuse the same controller.
+
+<img src="https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/shapes.gif" alt="Triangle, star, heart and rounded-rectangle theme reveals" width="800">
+
+### Circle (default)
+
+Put this in your screen in place of the default theme button.
+
+<!-- snippet:circle -->
+```dart
+// Put this in your screen below the managed MaterialApp.
+// controller is the one you created in main().
+RevealThemeButton(controller: controller, revealShape: const RevealShape.circle())
+```
+
+The reveal expands as a circle; omit revealShape for the same default.
+
+### Triangle
+
+Put this in your screen in place of the default theme button.
+
+<!-- snippet:triangle -->
+```dart
+// Put this in your screen below the managed MaterialApp.
+// controller is the one you created in main().
+RevealThemeButton(controller: controller, revealShape: const RevealShape.triangle())
+```
+
+The reveal expands as a triangle.
+
+### Star
+
+Put this in your screen in place of the default theme button.
+
+<!-- snippet:star -->
+```dart
+// Put this in your screen below the managed MaterialApp.
+// controller is the one you created in main().
+RevealThemeButton(
   controller: controller,
   revealShape: const RevealShape.star(points: 5, innerRadius: .45),
-);
-
-Widget triangleButton(RevealThemeController controller) => RevealThemeButton(
-  controller: controller,
-  revealShape: const RevealShape.triangle(),
-);
+)
 ```
-![Triangle and star alongside heart and rounded rectangle](https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/shapes.gif)
 
-All 11 vector factories: circle, ellipse, rectangle, roundedRectangle, triangle,
-star, heart, diamond, hexagon, polygon and customPath. Aspect ratios are width /
-height. Rounded corners use normalized longest-side units.
+The reveal expands as a five-point star.
 
-### SVG logo
+### Heart
 
+Put this in your screen in place of the default theme button.
+
+<!-- snippet:heart -->
 ```dart
-Widget svgMaskButton(RevealThemeController controller) => RevealThemeButton(
+// Put this in your screen below the managed MaterialApp.
+// controller is the one you created in main().
+RevealThemeButton(controller: controller, revealShape: const RevealShape.heart())
+```
+
+The reveal expands as a heart.
+
+### Rounded rectangle
+
+Put this in your screen in place of the default theme button.
+
+<!-- snippet:rounded -->
+```dart
+// Put this in your screen below the managed MaterialApp.
+// controller is the one you created in main().
+RevealThemeButton(
   controller: controller,
-  logo: const FlutterLogo(),
-  logoAnimation: RevealLogoAnimation.rotate,
+  revealShape: const RevealShape.roundedRectangle(aspectRatio: 1.5, cornerRadius: .16),
+)
+```
+
+The reveal expands as a rounded rectangle.
+
+### Icon
+
+Put this in your screen in place of the default theme button.
+
+<!-- snippet:icon -->
+```dart
+// Put this in your screen below the managed MaterialApp.
+// controller is the one you created in main().
+RevealThemeButton(controller: controller, revealShape: const RevealShape.icon(Icons.favorite))
+```
+
+The loaded icon glyph becomes the reveal shape; load custom fonts first.
+
+### SVG
+
+Put this in your screen and add the asset entry below.
+
+<!-- snippet:svg -->
+```dart
+// Put this in your screen below the managed MaterialApp.
+// controller is the one you created in main().
+RevealThemeButton(
+  controller: controller,
   revealShape: const RevealShape.svgAsset('assets/logo.svg'),
-);
-```
-![SVG reveal silhouette with a real hole](https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/logo_svg.gif)
-
-Here FlutterLogo is decorative. The bundled SVG controls the reveal silhouette.
-
-### PNG logo
-
-```dart
-Widget pngMaskButton(RevealThemeController controller) => RevealThemeButton(
-  controller: controller,
-  revealShape: const RevealShape.pngAsset(
-    'assets/logo.png',
-    alphaThreshold: 32,
-    trim: true,
-  ),
-);
-```
-![PNG alpha silhouette with a real transparent hole](https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/logo_png.gif)
-
-**Opaque PNGs are rectangles.** There is no background removal. Surviving pixels
-keep their partial alpha; `trim: false` retains transparent margins. Bytes use
-the same decoding/threshold options through `RevealShape.bytes`.
-
-### JSON shape
-
-```dart
-Widget jsonMaskButton(RevealThemeController controller) => RevealThemeButton(
-  controller: controller,
-  revealShape: const RevealShape.jsonAsset('assets/custom_shape.json'),
-);
+)
 ```
 
-Declare app-owned assets in your app's pubspec:
+Filled SVG paths become the silhouette; convert unsupported strokes or text to filled paths.
 
 ```yaml
+# Add this to your pubspec.yaml and put the file at that path
 flutter:
-  uses-material-design: true
   assets:
     - assets/logo.svg
+```
+
+<img src="https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/logo_svg.gif" alt="SVG logo silhouette revealing the new theme" width="800">
+
+### PNG
+
+Put this in your screen and add the asset entry below.
+
+<!-- snippet:png -->
+```dart
+// Put this in your screen below the managed MaterialApp.
+// controller is the one you created in main().
+RevealThemeButton(
+  controller: controller,
+  revealShape: const RevealShape.pngAsset('assets/logo.png', alphaThreshold: 32, trim: true),
+)
+```
+
+Transparent pixels stay outside the reveal; an opaque PNG produces a rectangle.
+
+```yaml
+# Add this to your pubspec.yaml and put the file at that path
+flutter:
+  assets:
     - assets/logo.png
+```
+
+<img src="https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/logo_png.gif" alt="PNG logo silhouette revealing the new theme" width="800">
+
+### JSON
+
+Put this in your screen and add the asset entry below.
+
+<!-- snippet:json -->
+```dart
+// Put this in your screen below the managed MaterialApp.
+// controller is the one you created in main().
+RevealThemeButton(
+  controller: controller,
+  revealShape: const RevealShape.jsonAsset('assets/custom_shape.json'),
+)
+```
+
+The JSON document chooses the reveal geometry.
+
+```yaml
+# Add this to your pubspec.yaml and put the file at that path
+flutter:
+  assets:
     - assets/custom_shape.json
 ```
 
-Those files exist in [example/assets](https://github.com/Ahmedelsapagh10/theme_reveal/tree/master/example/assets).
-Asset factories also accept `package` and `bundle`.
+Use this content for `assets/custom_shape.json`: `{"type":"shape","shape":"star","parameters":{"points":5,"innerRadius":0.45}}`.
 
 ### Custom Path
 
+Put this in your screen; draw your own geometry with the supplied size.
+
+<!-- snippet:path -->
 ```dart
-RevealShape diamondPath() => RevealShape.customPath(
-  builder: (size) => Path()
-    ..moveTo(size.width / 2, 0)
-    ..lineTo(size.width, size.height / 2)
-    ..lineTo(size.width / 2, size.height)
-    ..lineTo(0, size.height / 2)
-    ..close(),
-);
-```
-
-
-Builders receive Size(100,100). Resolution normalizes the longest framing side
-to 1 and centers it at (0,0). Empty, non-finite or degenerate paths are errors.
-
-### Icon shape
-
-```dart
-Widget iconMaskButton(RevealThemeController controller) => RevealThemeButton(
+// Put this in your screen below the managed MaterialApp.
+// controller is the one you created in main().
+RevealThemeButton(
   controller: controller,
-  style: const RevealButtonStyle(
-    lightIcon: Icons.wb_sunny_outlined,
-    darkIcon: Icons.nightlight_outlined,
+  revealShape: RevealShape.customPath(
+    builder: (size) => Path()
+      ..moveTo(size.width / 2, 0)
+      ..lineTo(size.width, size.height / 2)
+      ..lineTo(size.width / 2, size.height)
+      ..lineTo(0, size.height / 2)
+      ..close(),
   ),
-  revealShape: const RevealShape.icon(Icons.favorite),
-);
+)
 ```
 
+The path produces a diamond-shaped reveal.
 
-The style icons affect appearance; the heart glyph is the mask. Load custom
-fonts first. Icon masks rasterize the supplied family/package/fallbacks.
+## Animation config
 
-### Custom button via Trigger
+Put this button in your screen and adjust its animation fields.
 
+<!-- snippet:config -->
 ```dart
-Widget customThemeTrigger(RevealThemeController controller) =>
-    RevealThemeTrigger(
-      controller: controller,
-      animation: const RevealAnimationConfig(origin: RevealOrigin.gesture()),
-      child: const Chip(
-        avatar: Icon(Icons.contrast),
-        label: Text('Change appearance'),
-      ),
-    );
+// Put this in your screen below the managed MaterialApp.
+// controller is the one you created in main().
+RevealThemeButton(
+  controller: controller,
+  revealShape: const RevealShape.star(),
+  animation: const RevealAnimationConfig(
+    duration: Duration(milliseconds: 900),
+    curve: Curves.easeInOutCubic,
+    origin: RevealOrigin.gesture(),
+    completionStrategy: RevealCompletionStrategy.expandAndDissolve,
+    reducedMotion: RevealReducedMotion.system,
+  ),
+)
 ```
 
+The star expands for 900 ms from the tap and dissolves at completion; system reduced motion applies instantly.
 
-The trigger owns tap, pointer-down coordinates, Enter/Space, focus and semantics.
-Its child is decorative, even when that child has its own input handlers.
+## Programmatic control
 
-### Animation configuration
+Call these alternatives from a callback. Use the controller created in managed mode and a context below the viewport.
 
+Select a specific mode immediately.
+
+<!-- snippet:set -->
 ```dart
-const animation = RevealAnimationConfig(
-  duration: Duration(milliseconds: 900),
-  curve: Curves.easeInOutCubic,
-  origin: RevealOrigin.gesture(),
-  startRotation: -.4,
-  endRotation: .4,
-  repeatPolicy: RevealRepeatPolicy.queueLatest,
-  reducedMotion: RevealReducedMotion.system,
-);
+// Call from onPressed with a context below the viewport. Select dark mode immediately.
+controller.setThemeMode(ThemeMode.dark);
 ```
-![Real duration, curve and origin changes in Playground](https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/playground.gif)
 
-[RevealAnimationConfig](https://github.com/Ahmedelsapagh10/theme_reveal/blob/master/lib/src/animation/reveal_animation_config.dart) also
-configures delay/completion delay, initial size, alignment, contain/fill, completion
-start, and vector edge/glow/feather. Sizes are logical pixels; rotation is radians.
-`copyWith` retains nullable colors when passed null; construct a new config to clear them.
+The app becomes dark.
 
-Origins include button/gesture/screen center, physical and RTL-aware corners,
-normalized/offset coordinates and GlobalKey. Resolution uses actual render-object
-transforms through SafeArea, scrolling and nested Navigators.
+Toggle without a reveal.
 
-### Completion configuration
-
+<!-- snippet:toggle -->
 ```dart
-const preserve = RevealAnimationConfig(
-  completionStrategy: RevealCompletionStrategy.preserveShape,
-);
-const morph = RevealAnimationConfig(
-  completionStrategy: RevealCompletionStrategy.morphToFullscreen,
-  completionStart: .7,
-);
-const dissolve = RevealAnimationConfig(
-  completionStrategy: RevealCompletionStrategy.expandAndDissolve,
-);
+// Call from onPressed with a context below the viewport. Switch light/dark immediately.
+controller.toggleTheme();
 ```
-![The same star with preserve, morph and dissolve selected](https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/strategies.gif)
 
-### Programmatic reveal
+Light switches to dark, or dark to light.
 
+Return to system mode immediately.
+
+<!-- snippet:reset -->
 ```dart
-Future<bool> revealFromCenter(
-  BuildContext context,
-  RevealThemeController controller,
-) => ThemeRevealViewport.of(context).toggleTheme(
+// Call from onPressed with a context below the viewport. Follow device brightness immediately.
+controller.resetToSystem();
+```
+
+The app follows device brightness.
+
+Select dark mode with a reveal.
+
+<!-- snippet:reveal_set -->
+```dart
+// Call from onPressed with a context below the viewport. Reveal dark mode.
+ThemeRevealViewport.of(context).setThemeMode(controller, ThemeMode.dark, from: context);
+```
+
+The new dark theme expands from the supplied context.
+
+Toggle with a reveal.
+
+<!-- snippet:reveal_toggle -->
+```dart
+// Call from onPressed with a context below the viewport. Reveal the opposite light/dark mode.
+ThemeRevealViewport.of(context).toggleTheme(controller, from: context);
+```
+
+The opposite theme expands from the supplied context.
+
+Return to system mode with a reveal.
+
+<!-- snippet:reveal_reset -->
+```dart
+// Call from onPressed with a context below the viewport. Reveal the system theme and follow device brightness.
+ThemeRevealViewport.of(context).setThemeMode(controller, ThemeMode.system, from: context);
+```
+
+The reveal shows the device theme and keeps following device brightness.
+
+Reveal from the screen center.
+
+<!-- snippet:center -->
+```dart
+// Call from onPressed below the viewport; reveal from the screen center.
+ThemeRevealViewport.of(context).toggleTheme(
   controller,
   from: context,
-  shape: const RevealShape.circle(),
   config: const RevealAnimationConfig(origin: RevealOrigin.screenCenter()),
 );
 ```
 
+The opposite theme expands from the middle of the viewport.
 
-Call from below the viewport. `setThemeMode(controller, mode, ...)` and the
-controller-free `reveal(..., onThemeChange:)` use the same engine.
-`Future<bool>` is true for an applied change, including instant fallback; ignored,
-superseded, disposed or failed callbacks return false. Keep the state mutation
-inside the accepted callback.
+### GlobalKey origin
 
-## Persistence
+Keep `final anchor = GlobalKey()` in your screen State, then attach it to a widget.
 
-Restore before runApp to avoid a wrong-theme first frame:
-
+<!-- snippet:key_anchor -->
 ```dart
-Future<RevealThemeController> restoreSavedTheme() =>
-    RevealThemeController.create(
-      defaultMode: ThemeMode.system,
-      storage: SharedPrefsThemeStorage(
-        key: 'theme_reveal_kit.mode',
-        legacyBoolKey: 'wasDark',
-      ),
-      onPersistenceError: (error, stack) => debugPrint('Storage: $error'),
-    );
-```
-![Real separate-process persistence demonstration](https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/persistence.gif)
-
-Only the exact strings light, dark and system decode. Missing/invalid values use
-`defaultMode`. A reload does not rewrite invalid raw data. Setters notify
-immediately; writes serialize. Use `flush()` before inspecting disk and
-`reloadFromStorage()` after external edits. Errors are reported without reverting
-UI; inspect `lastPersistenceError`.
-
-Legacy migration reads a bool only when the new key is absent, then removes it
-after successful write. Old API prefixes/platform stores may require a custom
-backend. Preferences are not transactional critical-data storage.
-
-### Light / Dark / System
-
-```dart
-Future<bool> chooseMode(
-  BuildContext context,
-  RevealThemeController controller,
-  ThemeMode mode,
-) => ThemeRevealViewport.of(
-  context,
-).setThemeMode(controller, mode, from: context);
+// Put this widget in your screen; keep final anchor = GlobalKey() in its State.
+Text('Reveal starts here', key: anchor)
 ```
 
+This text becomes the origin for the next call.
 
-Pass ThemeMode.light, dark or system from your selector. System tracks platform
-brightness. Direct controller setters change mode instantly; viewport helpers request a reveal.
+Call from an onPressed in the same screen.
 
-### Custom storage
-
+<!-- snippet:key_call -->
 ```dart
-class SessionThemeStorage implements ThemeStorage {
-  ThemeMode? _mode;
-
-  @override
-  Future<ThemeMode?> read() async => _mode;
-
-  @override
-  Future<void> write(ThemeMode mode) async => _mode = mode;
-}
-
-Future<RevealThemeController> sessionController() =>
-    RevealThemeController.create(storage: SessionThemeStorage());
-```
-
-
-This recipe deliberately stores only for the session. Return null for missing or
-invalid data; let backend failures reach the controller. The built-in
-MemoryThemeStorage is convenient for tests. The full example's
-[storage adapter](https://github.com/Ahmedelsapagh10/theme_reveal/blob/master/example/lib/example_storage.dart) exposes the actual
-raw key to the persistence lab.
-
-## External state management
-
-A ValueNotifier can own theme state without RevealThemeController. This compiled
-recipe installs the same viewport through MaterialApp.builder:
-
-```dart
-Widget externalThemeApp(ValueNotifier<ThemeMode> mode) =>
-    ValueListenableBuilder(
-      valueListenable: mode,
-      builder: (context, value, _) => MaterialApp(
-        theme: ThemeData.light(),
-        darkTheme: ThemeData.dark(),
-        themeMode: value,
-        themeAnimationDuration: Duration.zero,
-        builder: (context, child) => ThemeRevealViewport(child: child!),
-        home: Scaffold(body: Center(child: externalThemeButton(mode))),
-      ),
-    );
-```
-```dart
-Widget externalThemeButton(ValueNotifier<ThemeMode> mode) => Builder(
-  builder: (context) => FilledButton(
-    child: const Text('Toggle theme'),
-    onPressed: () => ThemeRevealViewport.of(context).reveal(
-      from: context,
-      onThemeChange: () {
-        mode.value = mode.value == ThemeMode.dark
-            ? ThemeMode.light
-            : ThemeMode.dark;
-      },
-    ),
-  ),
+// Call from onPressed; anchor is the GlobalKey attached to the widget above.
+ThemeRevealViewport.of(context).toggleTheme(
+  controller,
+  from: context,
+  config: RevealAnimationConfig(origin: RevealOrigin.fromKey(anchor)),
 );
 ```
 
+The reveal expands from the keyed text.
 
-[external_main.dart](https://github.com/Ahmedelsapagh10/theme_reveal/blob/master/example/lib/external_main.dart) is the complete runnable
-ValueNotifier example, verified on macOS with retained counter state. Cubit and
-Riverpod can follow the same pattern; their packages/integrations were **not**
-tested. No state-management dependency is added.
+## Light/Dark/System selector
 
-**onThemeChange must finish after the new state is emitted**, not after merely
-scheduling it. The engine waits two end-of-frames after the callback completes.
+Put this below your managed viewport.
 
-## Three independent concepts
-
-```text
-Button appearance   ── RevealButtonStyle: radius, colors, moon/sun icons
-Decorative logo     ── logo + logoAnimation: fitted widget inside the button
-Reveal mask         ── revealShape: actual vector fill / raster alpha
-                                ↓
-                     Old-frame overlay with a cutout
-                                ↓
-                     The same live app in its new theme
-```
-
-A rounded button can reveal a star. A rotating FlutterLogo can reveal an SVG.
-Decorative logo animation never silently chooses or changes the mask.
-
-## Completion strategies
-
-| Strategy | Behavior | Use |
-| --- | --- | --- |
-| auto | Preserve when coverage succeeds; otherwise dissolve | Default |
-| preserveShape | Expand the original silhouette | Recognizable, coverable masks |
-| morphToFullscreen | Union with a growing circle from completionStart | Fill surrounding gaps continuously |
-| expandAndDissolve | Expand while fading the remaining old frame | Complex or holed masks |
-| custom(builder) | Return a placed cutout path at each raw progress | Custom geometry; terminal fade still applies |
-
-Morph is a circle union, not path interpolation. Custom callbacks receive
-shapePath, progress, viewport and origin. Raster input supplies its placement
-rectangle; the returned custom path overrides the alpha cutout.
-
-**Coverage is sampled, not mathematically exact.** The solver checks an 11×11
-grid and anchor hole, using final rotation, fit and alignment; it doubles then
-bisects the size. Fine holes can lie between samples. Failure chooses a 1.5×
-viewport-diagonal size and dissolve, even if preserve/morph was requested.
-
-**The terminal fade is the endpoint guarantee.** Simple masks fade over the last
-3% of raw progress; complex masks/custom strategies use 12%. At progress 1 no
-old pixels or edge decoration are painted. The grid alone is not the guarantee.
-
-## SVG support and JSON schema
-
-### SVG support matrix
-
-| Feature | Status |
-| --- | --- |
-| path, rect(rx/ry), circle, ellipse, polygon, filled polyline | Supported filled geometry |
-| Nested g, matrix/translate/scale/rotate/skewX/skewY | Supported |
-| Attribute/inline-style fill-rule; inheritance; evenOdd holes | Supported |
-| fill=none; display:none; viewBox framing/clipping; numeric/px root size | Supported |
-| Multiple filled elements | Union via Path.combine |
-| Gradients/resource fills, clipPath, mask, filter, use, text, stroke-only | Skipped with warnings |
-| External resources, scripts, images, CSS stylesheets, nested SVG viewports | Not loaded/executed; skipped with warnings |
-| CSS selectors, percentage lengths, stroke expansion, color/opacity rendering, animation | Not a general SVG renderer |
-
-Geometry affected by clip-path/mask/filter is skipped. DOCTYPE/ENTITY declarations
-are rejected. No supported filled geometry is an error. Limits: **1 MiB UTF-8,
-2000 elements**. Parsing uses xml/path_drawing, never flutter_svg or script execution.
-
-### JSON contract
-
-[Structural JSON Schema](https://github.com/Ahmedelsapagh10/theme_reveal/blob/master/doc/reveal_shape.schema.json) and
-[asset guide](https://github.com/Ahmedelsapagh10/theme_reveal/blob/master/doc/asset_masks.md) document the complete contract. Two forms:
-
-```json
-{
-  "type": "path",
-  "viewBox": [0, 0, 100, 100],
-  "paths": [{"d": "M50 5 L95 90 L5 90 Z", "fillRule": "evenOdd"}]
-}
-```
-
-```json
-{
-  "type": "shape",
-  "shape": "star",
-  "parameters": {"points": 5, "innerRadius": 0.45}
-}
-```
-
-Path documents contain 1–2000 SVG d strings, optional nonZero/evenOdd fillRule and
-an SVG transform string or six-number affine array. Optional viewBox is
-`[x,y,positiveWidth,positiveHeight]`. Unknown fields, invalid types, non-finite
-or empty geometry fail. Limit: **1 MiB UTF-8**. Lottie is rejected; export a frame as PNG/SVG.
-
-Predefined parameters: ellipse/rectangle aspectRatio (1.5); roundedRectangle
-aspectRatio (1.5), cornerRadius (.16); star points (5, 2–512), innerRadius (.45,
-strictly 0–1); polygon sides (6, 3–512). Other named built-ins take no parameters.
-Integers must decode as integer tokens. Geometry/path validation supplements the schema.
-
-**Low-level guidance:** applications pass RevealShape to the engine. It chooses
-resolve() for synchronous vectors/strings or resolveAsync() for icons/bytes/assets.
-Results are cache-owned; do not dispose borrowed results. retain()/dispose()
-manage an independently owned raster handle. A 12-entry shared LRU evicts and
-disposes raster handles; active reveals retain their own. Warnings are available
-on ResolvedShape. clearCache() clears completed entries, not pending loads.
-
-## Accessibility and reduced motion
-
+<!-- snippet:selector -->
 ```dart
-Widget accessibleThemeButton(RevealThemeController controller) =>
-    RevealThemeButton(
-      controller: controller,
-      tooltip: 'Change color theme',
-      semanticLabel: 'Switch color theme',
-      animation: const RevealAnimationConfig(
-        reducedMotion: RevealReducedMotion.system,
-      ),
-    );
+// Put this in your screen below the managed MaterialApp.
+// controller is the one you created in main().
+ListenableBuilder(
+  listenable: controller,
+  builder: (context, _) => SegmentedButton<ThemeMode>(
+    segments: const [
+      ButtonSegment(value: ThemeMode.light, label: Text('Light')),
+      ButtonSegment(value: ThemeMode.dark, label: Text('Dark')),
+      ButtonSegment(value: ThemeMode.system, label: Text('System')),
+    ],
+    selected: {controller.themeMode},
+    onSelectionChanged: (selection) => ThemeRevealViewport.of(
+      context,
+    ).setThemeMode(controller, selection.single, from: context),
+  ),
+)
 ```
 
+Selecting System follows device brightness; Light and Dark select explicit modes.
 
-Default labels switch with effective brightness. Override labels/tooltips for
-localization; custom labels are your responsibility as the mode changes. Targets
-are at least 48px when constraints permit. Do not constrain them smaller.
-RTL, high-contrast theme colors, text scaling, keyboard and semantics are covered
-by widget tests. Live VoiceOver remains unverified.
+## Custom storage and persistence
 
-`system` follows MediaQuery.disableAnimations; `always` applies instantly;
-`never` explicitly overrides it. The policy also controls press/icon/logo motion
-and makes busy indicators static. busy/disabled prevent activation.
+Add this complete class file when you want to use your own asynchronous string storage.
 
-## Platform support and verification
+<!-- snippet:storage -->
+```dart
+// 1) Connect your own asynchronous string storage through these callbacks.
+import 'package:flutter/material.dart';
+import 'package:theme_reveal_kit/theme_reveal_kit.dart';
 
-| Target | Status |
-| --- | --- |
-| macOS | Verified in debug: native pixel tests, real recordings and separate-process persistence |
-| Android | Unverified: no device/emulator run |
-| iOS | Unverified: no device/simulator run |
-| Web | Unverified: host exists; browser runtime not checked |
-| Windows / Linux | Unverified |
-| VoiceOver | Unverified; widget semantics do not certify a screen reader |
-| Profile-mode performance | Unmeasured; no FPS or throughput claim |
-| Minimum supported SDK | Constraint checked; execution only on Flutter 3.41.9 / Dart 3.11.5 |
+class AppThemeStorage implements ThemeStorage {
+  AppThemeStorage({required this.load, required this.save});
+  final Future<String?> Function() load;
+  final Future<void> Function(String) save;
+  @override
+  Future<ThemeMode?> read() async => ThemeModeCodec.decode(await load());
+  @override
+  Future<void> write(ThemeMode mode) => save(ThemeModeCodec.encode(mode));
+}
+```
 
-The native matrix checks 55 shape/strategy combinations and snapshot cleanup.
-Tests are not a performance benchmark. Recording at 15 fps describes GIF export,
-not app rendering throughput. Desktop AX inspection previously encountered a
-Flutter macOS accessibility-bridge crash; recordings used no AX inspection.
+Your callbacks read and write the strings `light`, `dark` or `system`.
 
-## Limitations
+In main(), create your adapter and restore it before calling runApp.
 
-- Platform views, native surfaces and system UI are **not captured**. Flutter
-  toImage success does not prove a map/video/web view/native title bar is included.
-- Capture failure reports onError and applies the theme instantly. Invalid shapes
-  report and fall back to circle. Metrics/non-resumed lifecycle abort animation.
-- Outward reveals only; no inward direction or Lottie playback/frame extraction.
-- PNG/bytes: 8 MiB encoded cap, 16 MP source cap, 256px decoded longest side.
-  First animated-image frame only; fine details may be lost. Opaque input is a rectangle.
-- Edge/glow/feather are vector-only and ignored by icon/PNG/bytes masks.
-- Snapshot memory scales with area and pixel ratio squared. Capture is capped at
-  min(devicePixelRatio,3), with additional texture/layer overhead.
+<!-- snippet:restore -->
+```dart
+// 2) In main(), initialize bindings and await this before runApp.
+// YOUR CODE: pass AppThemeStorage(load: yourRead, save: yourWrite) as storage.
+WidgetsFlutterBinding.ensureInitialized();
+final controller = await RevealThemeController.create(
+  storage: storage,
+  defaultMode: ThemeMode.system,
+  onPersistenceError: (error, stack) => debugPrint('Theme storage: $error'),
+);
+```
+
+The restored mode appears before the first frame; missing or invalid data uses defaultMode.
+
+Wait for a write when you need its result.
+
+<!-- snippet:persistence -->
+```dart
+// In an async callback, save dark mode and wait for the write to finish.
+controller.setThemeMode(ThemeMode.dark);
+await controller.flush();
+if (controller.lastPersistenceError != null) {
+  debugPrint('Theme preference could not be saved');
+}
+```
+
+Storage errors reach onPersistenceError and lastPersistenceError without reverting the visible theme.
+
+Reload after another part of your app edits the saved preference.
+
+<!-- snippet:reload -->
+```dart
+// Read the preference again after another part of your app changes storage.
+await controller.reloadFromStorage();
+```
+
+The app picks up the stored value.
+
+Managed mode defaults to SharedPreferencesAsync. Old SharedPreferences values are not shared automatically; keep existing preferences in external mode or supply a compatible backend. `legacyBoolKey` only migrates accessible boolean flags.
+
+<img src="https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/persistence.gif" alt="Saved theme restored after restarting the app" width="800">
 
 ## Troubleshooting
 
-**Why is the change instant?** Check enabled, duration and reduced motion.
-Install all managed settings. Buttons outside a viewport toggle instantly;
-programmatic of(context) throws when none is installed. Inspect onError.
+- **Theme unchanged →** bind `themeMode` to the changing state and supply both themes.
+- **No animation →** install the viewport and check enabled, duration and reduced-motion settings.
+- **Wrong origin →** pass a context below the viewport; use gesture origin for pointer coordinates.
+- **Opaque PNG rectangle →** supply an image with real transparency.
+- **Repeated taps ignored →** use `RevealRepeatPolicy.queueLatest` to retain the latest pending request.
+- **Native map/video missing →** platform views and system UI are not included; test your target composition.
+- **Theme changes late →** finish `onThemeChange` after the new state is emitted; await asynchronous updates and disable MaterialApp theme animation.
+- **Asset missing →** declare the file under `flutter.assets` and check its name and case.
+- **SVG differs →** use filled paths or export a transparent PNG for unsupported SVG features.
 
-**Why is my icon wrong or empty?** Load the correct custom font first and set
-family/package/fallbacks. Empty/missing-glyph masks fail. A fallback font that has
-the glyph can render successfully; this does not certify the intended font identity.
+## Platform support
 
-**Why is my PNG rectangular?** It is opaque. Supply actual alpha; no background
-removal is performed. Check trim and threshold for margins or missing fine edges.
+| Platform | Status |
+| --- | --- |
+| macOS | Verified |
+| Android | Unverified |
+| iOS | Unverified |
+| Web | Unverified |
+| Windows / Linux | Unverified |
 
-**Why does my SVG differ?** Consult the matrix/warnings. Convert unsupported
-strokes, clipping, gradients or text to supported filled paths/transparent PNG.
+Ahmed Elsapagh · [Portfolio](https://elsapagh.octopusteam.net/)
 
-**Why is native content missing?** Platform views/native surfaces/system UI are
-outside the Flutter snapshot. Test your actual composition on target devices.
+[MIT License](https://github.com/Ahmedelsapagh10/theme_reveal/blob/master/LICENSE) © 2026 Ahmed Elsapagh
 
-**Why does the theme appear late?** Finish onThemeChange only after emitting the
-new state. Set MaterialApp.themeAnimationDuration to zero. Keep the mutation in
-the accepted callback so ignored requests cannot change state.
+[Contributing](https://github.com/Ahmedelsapagh10/theme_reveal/blob/master/CONTRIBUTING.md)
 
-**Why does a holed mask dissolve?** Coverage failed, so dissolve protects the
-endpoint. Terminal fade, not the sample grid, clears all remaining old pixels.
+[Example](https://github.com/Ahmedelsapagh10/theme_reveal/tree/master/example)
 
-**Why did a repeat disappear?** ignore is the default. queueLatest retains only
-the latest pending request and resolves its origin when it becomes active.
-
-## Run the example
-
-```sh
-cd example
-flutter pub get
-flutter run -d macos
-# Separate controller-free app:
-flutter run -d macos -t lib/external_main.dart
-```
-
-Home offers rich content; Playground exposes every config field and six presets;
-Settings owns the compact button/mode selector/persistence lab; Integrations
-shows managed, custom-storage, Trigger, asset and programmatic patterns. One
-RevealPreferences notifier feeds all controls, with state preserved across tabs.
-
-## Contributing
-
-Read [the example guide](https://github.com/Ahmedelsapagh10/theme_reveal/blob/master/example/README.md) and keep changes scoped.
-Include regression tests and report which platforms you actually ran. To verify:
-
-```sh
-dart format .
-flutter analyze
-flutter test --concurrency=2
-cd example
-flutter test --concurrency=1
-flutter test integration_test/circular_reveal_test.dart -d macos
-cd ..
-flutter pub publish --dry-run
-```
-
-Do not treat the dry-run as permission to publish. Reproducible recording and
-conversion steps are in [the media guide](https://github.com/Ahmedelsapagh10/theme_reveal/blob/master/doc/media/README.md).
-No mock animation is used. Raw recordings and local previews are excluded from
-the package archive. New media URLs become available after these files are pushed
-to the repository; this task does not push or publish them.
-
-Support / feedback: please report issues in the
-[repository issue tracker](https://github.com/Ahmedelsapagh10/theme_reveal/issues).
-
-## About the author
-
-**Ahmed Elsapagh** is a Flutter developer and the author and maintainer of
-Theme Reveal Kit. Visit his [portfolio](https://elsapagh.octopusteam.net/).
-
-## License
-
-[MIT](https://github.com/Ahmedelsapagh10/theme_reveal/blob/master/LICENSE) © 2026 Ahmed Elsapagh ·
-[Changelog](https://github.com/Ahmedelsapagh10/theme_reveal/blob/master/CHANGELOG.md) ·
-[Repository](https://github.com/Ahmedelsapagh10/theme_reveal)
+[Repository](https://github.com/Ahmedelsapagh10/theme_reveal) · [Issue tracker](https://github.com/Ahmedelsapagh10/theme_reveal/issues)

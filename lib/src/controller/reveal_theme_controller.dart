@@ -8,6 +8,14 @@ typedef ThemePersistenceErrorCallback =
     void Function(Object error, StackTrace stackTrace);
 
 /// Owns theme preference independently of the reveal animation engine.
+///
+/// ```dart
+/// // In main(), restore before runApp; then pass controller to RevealThemeBuilder.
+/// WidgetsFlutterBinding.ensureInitialized();
+/// final controller = await RevealThemeController.create();
+/// controller.setThemeMode(ThemeMode.dark);
+/// await controller.flush();
+/// ```
 class RevealThemeController extends ChangeNotifier with WidgetsBindingObserver {
   /// Synchronous initialization does not read storage. For restoration before
   /// runApp, await [create] after WidgetsFlutterBinding.ensureInitialized().

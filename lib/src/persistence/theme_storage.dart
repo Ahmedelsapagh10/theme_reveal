@@ -1,6 +1,19 @@
 import 'package:flutter/material.dart';
 
 /// Storage implementations return null for missing or invalid preferences.
+///
+/// ```dart
+/// // Connect your asynchronous string read/write functions to this adapter.
+/// class AppThemeStorage implements ThemeStorage {
+///   AppThemeStorage({required this.load, required this.save});
+///   final Future<String?> Function() load;
+///   final Future<void> Function(String) save;
+///   @override
+///   Future<ThemeMode?> read() async => ThemeModeCodec.decode(await load());
+///   @override
+///   Future<void> write(ThemeMode mode) => save(ThemeModeCodec.encode(mode));
+/// }
+/// ```
 abstract interface class ThemeStorage {
   /// Reads a preference, returning null for missing or invalid data.
   Future<ThemeMode?> read();

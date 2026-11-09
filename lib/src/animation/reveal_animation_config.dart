@@ -6,6 +6,15 @@ import 'reveal_completion_strategy.dart';
 import 'transition_state.dart';
 
 /// Vector reveal configuration. Sizes are logical pixels; rotations radians.
+///
+/// ```dart
+/// // Set this as the animation argument on your button or trigger.
+/// const RevealAnimationConfig(
+///   duration: Duration(milliseconds: 900),
+///   origin: RevealOrigin.screenCenter(),
+///   reducedMotion: RevealReducedMotion.system,
+/// );
+/// ```
 @immutable
 class RevealAnimationConfig {
   /// Creates an outward reveal configuration with a 650 ms circular default.

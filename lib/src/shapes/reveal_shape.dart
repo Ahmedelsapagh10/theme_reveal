@@ -48,18 +48,38 @@ enum _ShapeKind {
 @immutable
 class RevealShape {
   /// Creates the default circular vector silhouette.
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// const RevealShape.circle();
+  /// ```
   const RevealShape.circle() : this._(_ShapeKind.circle);
 
   /// Creates an ellipse with width/height aspectRatio (default 1.5).
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// const RevealShape.ellipse(aspectRatio: 2);
+  /// ```
   const RevealShape.ellipse({double aspectRatio = 1.5})
     : this._(_ShapeKind.ellipse, aspectRatio: aspectRatio);
 
   /// Creates a rectangle with width/height aspectRatio (default 1.5).
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// const RevealShape.rectangle(aspectRatio: 2);
+  /// ```
   const RevealShape.rectangle({double aspectRatio = 1.5})
     : this._(_ShapeKind.rectangle, aspectRatio: aspectRatio);
 
   /// [cornerRadius] is in normalized longest-side units, clamped to half the
   /// shortest side. [aspectRatio] is width / height, before placement rotation.
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// const RevealShape.roundedRectangle(cornerRadius: .2);
+  /// ```
   const RevealShape.roundedRectangle({
     double cornerRadius = .16,
     double aspectRatio = 1.5,
@@ -70,27 +90,64 @@ class RevealShape {
        );
 
   /// Creates an upright equilateral triangle.
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// const RevealShape.triangle();
+  /// ```
   const RevealShape.triangle() : this._(_ShapeKind.triangle);
 
   /// Creates a regular star with 2–512 points and 0 < innerRadius < 1.
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// const RevealShape.star(points: 5, innerRadius: .45);
+  /// ```
   const RevealShape.star({int points = 5, double innerRadius = .45})
     : this._(_ShapeKind.star, points: points, innerRadius: innerRadius);
 
   /// Creates a filled cubic-curve heart.
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// const RevealShape.heart();
+  /// ```
   const RevealShape.heart() : this._(_ShapeKind.heart);
 
   /// Creates a four-vertex diamond.
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// const RevealShape.diamond();
+  /// ```
   const RevealShape.diamond() : this._(_ShapeKind.diamond);
 
   /// Creates a regular six-sided polygon.
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// const RevealShape.hexagon();
+  /// ```
   const RevealShape.hexagon() : this._(_ShapeKind.hexagon);
 
   /// Creates a regular polygon with 3–512 sides.
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// const RevealShape.polygon(sides: 8);
+  /// ```
   const RevealShape.polygon({required int sides})
     : this._(_ShapeKind.polygon, points: sides);
 
   /// Invoked with Size(100, 100), then normalized by its own bounds. Filled open
   /// contours are allowed; empty, non-finite and zero-area geometry is rejected.
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// RevealShape.customPath(
+  ///   builder: (size) => Path()..addOval(Offset.zero & size),
+  /// );
+  /// ```
   const RevealShape.customPath({required Path Function(Size) builder})
     : this._(_ShapeKind.custom, builder: builder);
 
@@ -98,12 +155,22 @@ class RevealShape {
   ///
   /// Custom fonts must be loaded first. Missing-glyph/empty masks are errors;
   /// a fallback font containing the glyph may still render it.
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// const RevealShape.icon(Icons.favorite);
+  /// ```
   const RevealShape.icon(IconData icon) : this._(_ShapeKind.icon, source: icon);
 
   /// Decodes a bundled alpha mask, capped at 8 MiB, 16 MP input and 256px output.
   ///
   /// alphaThreshold is 1–255; trim removes transparent margins. Partial alpha
   /// is preserved above threshold. Fully opaque input is a rectangle.
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// const RevealShape.pngAsset('assets/logo.png', trim: true);
+  /// ```
   const RevealShape.pngAsset(
     String asset, {
     String? package,
@@ -123,6 +190,12 @@ class RevealShape {
   ///
   /// Uses the same limits, alpha threshold and trimming as pngAsset. Empty or
   /// oversized byte input throws immediately; other failures occur on resolution.
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// final data = await rootBundle.load('assets/logo.png');
+  /// RevealShape.bytes(data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
+  /// ```
   factory RevealShape.bytes(
     Uint8List bytes, {
     int alphaThreshold = 1,
@@ -143,6 +216,11 @@ class RevealShape {
   }
 
   /// Loads a bounded SVG filled silhouette from an app or package asset bundle.
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// const RevealShape.svgAsset('assets/logo.svg');
+  /// ```
   const RevealShape.svgAsset(
     String asset, {
     String? package,
@@ -155,10 +233,22 @@ class RevealShape {
        );
 
   /// Describes a bounded, data-only SVG silhouette; unsupported features warn.
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// const RevealShape.svgString(
+  ///   '<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="5"/></svg>',
+  /// );
+  /// ```
   const RevealShape.svgString(String source)
     : this._(_ShapeKind.svgString, source: source);
 
   /// Loads a strict path/shape JSON document from an app or package asset bundle.
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// const RevealShape.jsonAsset('assets/custom_shape.json');
+  /// ```
   const RevealShape.jsonAsset(
     String asset, {
     String? package,
@@ -171,6 +261,11 @@ class RevealShape {
        );
 
   /// Describes a strict path/shape JSON document; Lottie input is rejected.
+  ///
+  /// ```dart
+  /// // Pass this shape to RevealThemeButton.revealShape or viewport.reveal(shape: ...).
+  /// const RevealShape.jsonString('{"type":"shape","shape":"heart"}');
+  /// ```
   const RevealShape.jsonString(String source)
     : this._(_ShapeKind.jsonString, source: source);
 

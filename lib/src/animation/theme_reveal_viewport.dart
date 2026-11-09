@@ -22,6 +22,18 @@ typedef RevealThemeChange = FutureOr<void> Function();
 
 /// Install around the child supplied to MaterialApp.builder, above Navigator.
 /// The live subtree remains in one RepaintBoundary for the viewport's lifetime.
+///
+/// ```dart
+/// // Use your existing mode and state update; keep the update inside onThemeChange.
+/// MaterialApp(
+///   theme: ThemeData.light(),
+///   darkTheme: ThemeData.dark(),
+///   themeMode: mode,
+///   themeAnimationDuration: Duration.zero,
+///   builder: (context, child) => ThemeRevealViewport(child: child!),
+///   home: home,
+/// )
+/// ```
 class ThemeRevealViewport extends StatefulWidget {
   /// Wraps the MaterialApp.builder child in the permanent snapshot boundary.
   const ThemeRevealViewport({
@@ -109,6 +121,14 @@ class ThemeRevealViewportState extends State<ThemeRevealViewport>
   /// superseded, disposed, or failed callbacks return false. A queued request's
   /// callback runs only when it becomes active; its origin is resolved then.
   /// [onThemeChange] must finish after the new state has been emitted.
+  ///
+  /// ```dart
+  /// // Use your existing mode and state update; keep the update inside onThemeChange.
+  /// await ThemeRevealViewport.of(buttonContext).reveal(
+  ///   from: buttonContext,
+  ///   onThemeChange: () => mode.value = ThemeMode.dark,
+  /// );
+  /// ```
   Future<bool> reveal({
     BuildContext? from,
     Offset? globalPosition,
@@ -139,6 +159,11 @@ class ThemeRevealViewportState extends State<ThemeRevealViewport>
   }
 
   /// Reveals a controller toggle with the same acceptance and fallback rules as reveal.
+  ///
+  /// ```dart
+  /// // Toggle with a reveal; context must be below the viewport.
+  /// ThemeRevealViewport.of(context).toggleTheme(controller, from: context);
+  /// ```
   Future<bool> toggleTheme(
     RevealThemeController controller, {
     BuildContext? from,
@@ -154,6 +179,11 @@ class ThemeRevealViewportState extends State<ThemeRevealViewport>
   );
 
   /// Reveals an explicit controller mode with the same result semantics as reveal.
+  ///
+  /// ```dart
+  /// // Select dark mode with a reveal; context must be below the viewport.
+  /// ThemeRevealViewport.of(context).setThemeMode(controller, ThemeMode.dark, from: context);
+  /// ```
   Future<bool> setThemeMode(
     RevealThemeController controller,
     ThemeMode mode, {

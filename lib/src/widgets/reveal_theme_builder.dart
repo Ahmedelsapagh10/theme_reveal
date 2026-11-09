@@ -20,6 +20,20 @@ class RevealThemeSettings {
 }
 
 /// Keeps the viewport wrapper identity stable across normal theme rebuilds.
+///
+/// ```dart
+/// // Use below your app viewport; reuse the controller created in main().
+/// RevealThemeBuilder(
+///   controller: controller,
+///   builder: (context, settings) => MaterialApp(
+///     theme: ThemeData.light(), darkTheme: ThemeData.dark(),
+///     themeMode: settings.themeMode,
+///     themeAnimationDuration: settings.themeAnimationDuration,
+///     builder: settings.builder,
+///     home: RevealThemeButton(controller: controller),
+///   ),
+/// );
+/// ```
 class RevealThemeBuilder extends StatefulWidget {
   /// Rebuilds app settings from controller changes while preserving viewport identity.
   const RevealThemeBuilder({

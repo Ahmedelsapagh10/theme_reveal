@@ -1,4 +1,4 @@
-// README snippet source. This is a complete application entry point.
+// A complete managed-theme application entry point.
 // snippet:quick_start
 import 'package:flutter/material.dart';
 import 'package:theme_reveal_kit/theme_reveal_kit.dart';

@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:theme_reveal_kit/theme_reveal_kit.dart';
 import 'package:theme_reveal_kit_example/readme_external.dart' as adapter;
+import 'package:theme_reveal_kit_example/readme_usage.dart' as usage;
+import 'support/readme_bloc.dart' as bloc_recipe;
 import 'package:theme_reveal_kit_example/presentation_recipes.dart' as recipes;
 import 'package:theme_reveal_kit_example/presentation_quick_start.dart'
     as quick;
@@ -25,88 +27,146 @@ void main() {
   final root = _packageRoot();
   String read(String path) => File('${root.path}/$path').readAsStringSync();
 
-  test(
-    'all 18 README Dart blocks match sources compiled by this test import',
-    () {
-      final readme = read('README.md');
-      final source = [
-        read('example/lib/readme_snippets.dart'),
-        read('example/lib/readme_external.dart'),
-        read('example/lib/presentation_recipes.dart'),
-        read('example/lib/presentation_quick_start.dart'),
-      ].join('\n');
-      final blocks = RegExp(
-        r'```dart\n([\s\S]*?)\n```',
-      ).allMatches(readme).toList();
-      expect(blocks, hasLength(18));
-      for (final block in RegExp(
-        r'```[^\n]*\n([\s\S]*?)\n```',
-      ).allMatches(readme)) {
-        expect(block[1]!.split('\n').length, lessThanOrEqualTo(25));
-      }
-      for (final block in blocks) {
-        expect(
-          source.contains(block[1]!),
-          isTrue,
-          reason: 'README block differs from compiled code: ${block[1]}',
-        );
-      }
-      for (final block in RegExp(
-        r'```dart\n([\s\S]*?)\n```',
-      ).allMatches(read('doc/widgets_and_external_mode.md'))) {
-        expect(source.contains(block[1]!), isTrue);
-      }
-      expect(
-        RegExp(r'^## ', multiLine: true).allMatches(readme),
-        hasLength(18),
-      );
-      for (final match in RegExp(r'\]\(([^)]+)\)').allMatches(readme)) {
-        final target = match[1]!;
-        if (!target.startsWith('http') && !target.startsWith('#')) {
-          expect(
-            File('${root.path}/$target').existsSync(),
-            isTrue,
-            reason: target,
-          );
-        }
-      }
-      expect(readme, contains('Profile-mode performance | Unmeasured'));
-      expect(readme, contains('![macOS verified]'));
-      const raw =
-          'https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/';
+  test('all README Dart blocks match sources compiled by this test import', () {
+    final readme = read('README.md');
+    String dedent(String value) {
+      final lines = value.replaceFirst(RegExp(r'\s+$'), '').split('\n');
+      final indent = lines
+          .where((line) => line.trim().isNotEmpty)
+          .map((line) => line.length - line.trimLeft().length)
+          .reduce((a, b) => a < b ? a : b);
+      return lines
+          .map((line) => line.length >= indent ? line.substring(indent) : '')
+          .join('\n')
+          .trim();
+    }
+
+    final sourceFiles = [
+      'example/lib/readme_usage.dart',
+      'example/lib/readme_managed.dart',
+      'example/lib/readme_notifier.dart',
+      'example/lib/readme_external_app.dart',
+      'example/lib/readme_settings.dart',
+      'example/lib/readme_storage.dart',
+      'example/test/support/readme_bloc.dart',
+    ];
+    final snippetsByKey = <String, String>{};
+    for (final path in sourceFiles) {
       for (final match in RegExp(
-        r'https://raw\.githubusercontent\.com/[^)\s"]+',
-      ).allMatches(readme)) {
-        expect(match[0]!, startsWith(raw));
+        r'^[ \t]*// snippet:(\w+):(file|expression|statements)\n(.*?)^[ \t]*// end:\1',
+        multiLine: true,
+        dotAll: true,
+      ).allMatches(read(path))) {
+        var body = dedent(match[3]!);
+        if (match[2] == 'expression') body = body.substring(0, body.length - 1);
+        snippetsByKey[match[1]!] = body;
+      }
+    }
+    final blocks = RegExp(
+      r'<!-- snippet:(\w+) -->\n```dart\n(.*?)\n```',
+      dotAll: true,
+    ).allMatches(readme).toList();
+    expect(blocks.length, snippetsByKey.length);
+    expect(RegExp(r'```dart\n').allMatches(readme).length, blocks.length);
+    for (final block in blocks) {
+      expect(
+        block[2],
+        snippetsByKey[block[1]],
+        reason: 'README body differs: ${block[1]}',
+      );
+      expect(block[2]!.startsWith('//'), isTrue);
+      expect(
+        block[2],
+        isNot(matches(RegExp(r'^(Widget |Future<bool> )', multiLine: true))),
+      );
+    }
+    final source = [
+      read('example/lib/readme_external.dart'),
+      read('example/lib/readme_snippets.dart'),
+    ].join('\n');
+    for (final block in RegExp(
+      r'```dart\n([\s\S]*?)\n```',
+    ).allMatches(read('doc/widgets_and_external_mode.md'))) {
+      expect(source.contains(block[1]!), isTrue);
+    }
+    expect(RegExp(r'^## ', multiLine: true).allMatches(readme), hasLength(12));
+    for (final match in RegExp(r'\]\(([^)]+)\)').allMatches(readme)) {
+      final target = match[1]!;
+      if (!target.startsWith('http') && !target.startsWith('#')) {
         expect(
-          File('${root.path}/${match[0]!.substring(raw.length)}').existsSync(),
+          FileSystemEntity.typeSync('${root.path}/$target') !=
+              FileSystemEntityType.notFound,
           isTrue,
+          reason: target,
         );
       }
-      final manifest = jsonDecode(read('doc/media/manifest.json')) as List;
-      for (final entry in manifest) {
-        final file = File('${root.path}/doc/media/${entry['file']}');
-        expect(file.existsSync(), isTrue);
-        expect(file.lengthSync(), entry['bytes']);
-        if (file.path.endsWith('.gif')) {
-          expect(file.lengthSync(), lessThanOrEqualTo(1500000));
-        }
+    }
+    expect(readme, contains('| macOS | Verified |'));
+    expect(readme, contains('| Android | Unverified |'));
+    expect(readme, contains('| iOS | Unverified |'));
+    expect(readme, contains('| Web | Unverified |'));
+    expect(readme, contains('alt="verified: macOS"'));
+    final images = RegExp(
+      r'<img\b[^>]*>',
+    ).allMatches(readme).map((m) => m[0]!).toList();
+    final badgeSources = images
+        .take(5)
+        .map((tag) => RegExp(r'src="([^"]+)"').firstMatch(tag)![1]!)
+        .toList();
+    expect(badgeSources, [
+      'https://img.shields.io/pub/v/theme_reveal_kit',
+      'https://img.shields.io/pub/likes/theme_reveal_kit',
+      'https://img.shields.io/pub/points/theme_reveal_kit',
+      'https://img.shields.io/badge/license-MIT-blue',
+      'https://img.shields.io/badge/verified-macOS-success',
+    ]);
+    for (final tag in images) {
+      expect(tag, matches(r'alt="[^"]+"'));
+      expect(tag, matches(r'width="[1-9][0-9]*"'));
+    }
+    for (final tag in images.skip(5)) {
+      expect(
+        tag,
+        contains(
+          'https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/doc/media/',
+        ),
+      );
+    }
+    expect(readme, isNot(contains('](LICENSE)')));
+    expect(readme, isNot(contains('](CONTRIBUTING.md)')));
+    expect(readme, isNot(contains('](example/)')));
+    const raw =
+        'https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/';
+    for (final match in RegExp(
+      r'https://raw\.githubusercontent\.com/[^)\s"]+',
+    ).allMatches(readme)) {
+      expect(match[0]!, startsWith(raw));
+      expect(
+        File('${root.path}/${match[0]!.substring(raw.length)}').existsSync(),
+        isTrue,
+      );
+    }
+    final manifest = jsonDecode(read('doc/media/manifest.json')) as List;
+    for (final entry in manifest) {
+      final file = File('${root.path}/doc/media/${entry['file']}');
+      expect(file.existsSync(), isTrue);
+      expect(file.lengthSync(), entry['bytes']);
+      if (file.path.endsWith('.gif')) {
+        expect(file.lengthSync(), lessThanOrEqualTo(1500000));
       }
-    },
-  );
+    }
+  });
 
   test(
-    'README JSON documents resolve, assets are declared, schema and release metadata are valid',
+    'JSON fixtures resolve, assets are declared, schema and release metadata are valid',
     () {
-      final readme = read('README.md');
-      final jsonBlocks = RegExp(
-        r'```json\n([\s\S]*?)\n```',
-      ).allMatches(readme).toList();
-      expect(jsonBlocks, hasLength(2));
-      for (final block in jsonBlocks) {
-        expect(jsonDecode(block[1]!), isA<Map<String, dynamic>>());
+      for (final document in [
+        snippets.jsonPathDocument,
+        snippets.jsonShapeDocument,
+      ]) {
+        expect(jsonDecode(document), isA<Map<String, dynamic>>());
         expect(
-          RevealShape.jsonString(block[1]!).resolve().bounds.isEmpty,
+          RevealShape.jsonString(document).resolve().bounds.isEmpty,
           isFalse,
         );
       }
@@ -122,7 +182,27 @@ void main() {
         expect(read('example/pubspec.yaml'), contains('    - $asset'));
         expect(File('${root.path}/example/$asset').existsSync(), isTrue);
       }
-      expect(read('pubspec.yaml'), contains('version: 0.1.0'));
+      expect(read('pubspec.yaml'), contains('version: 0.1.1'));
+      final metadata = read('pubspec.yaml');
+      expect(
+        metadata,
+        contains(
+          'issue_tracker: https://github.com/Ahmedelsapagh10/theme_reveal/issues',
+        ),
+      );
+      final screenshots = RegExp(
+        r'^    path: (.+)$',
+        multiLine: true,
+      ).allMatches(metadata).toList();
+      expect(screenshots.length, inInclusiveRange(1, 10));
+      for (final screenshot in screenshots) {
+        expect(File('${root.path}/${screenshot[1]}').existsSync(), isTrue);
+      }
+      final topics = metadata.split('topics:\n')[1].split('\n\n')[0];
+      expect(
+        RegExp(r'^  - ', multiLine: true).allMatches(topics).length,
+        lessThanOrEqualTo(5),
+      );
       expect(read('pubspec.yaml'), contains('flutter: ">=3.41.0"'));
       expect(
         read('pubspec.yaml'),
@@ -141,6 +221,9 @@ void main() {
     (tester) async {
       final controller = RevealThemeController(storage: MemoryThemeStorage());
       expect(quick.main, isA<Function>());
+      expect(usage.main, isA<Function>());
+      expect(const bloc_recipe.CubitThemeApp(), isA<Widget>());
+      expect(usage.externalButton, isA<Function>());
       expect(recipes.animation.duration, const Duration(milliseconds: 900));
       expect(recipes.chooseMode, isA<Function>());
       final widgets = <Widget>[
@@ -217,6 +300,105 @@ void main() {
     );
     await tester.pumpWidget(const SizedBox.shrink());
     mode.dispose();
+  });
+
+  testWidgets('usage Cubit-style and ValueNotifier apps emit through reveal', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const bloc_recipe.CubitThemeApp());
+    await tester.tap(find.text('Change theme'));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+      ThemeMode.dark,
+    );
+    await tester.pumpWidget(const usage.NotifierThemeApp());
+    await tester.tap(find.text('Change theme'));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+      ThemeMode.dark,
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets(
+    'usage Settings, trigger and three-state selector change managed theme',
+    (tester) async {
+      final controller = RevealThemeController(storage: MemoryThemeStorage());
+      Widget app(Widget home) => RevealThemeBuilder(
+        controller: controller,
+        builder: (context, settings) => MaterialApp(
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
+          themeMode: settings.themeMode,
+          themeAnimationDuration: settings.themeAnimationDuration,
+          builder: settings.builder,
+          home: home,
+        ),
+      );
+      await tester.pumpWidget(app(usage.SettingsPage(controller: controller)));
+      await tester.tap(find.byType(RevealThemeButton));
+      await tester.pumpAndSettle();
+      expect(controller.themeMode, ThemeMode.dark);
+      await tester.pumpWidget(
+        app(Scaffold(body: usage.customButton(controller))),
+      );
+      await tester.tap(find.byType(RevealThemeTrigger));
+      await tester.pumpAndSettle();
+      expect(controller.themeMode, ThemeMode.light);
+      await tester.pumpWidget(
+        app(Scaffold(body: usage.themeSelector(controller))),
+      );
+      for (final mode in [ThemeMode.dark, ThemeMode.system, ThemeMode.light]) {
+        await tester.tap(
+          find.text(switch (mode) {
+            ThemeMode.light => 'Light',
+            ThemeMode.dark => 'Dark',
+            ThemeMode.system => 'System',
+          }),
+        );
+        await tester.pumpAndSettle();
+        expect(controller.themeMode, mode);
+      }
+      for (final button in [
+        usage.circleButton,
+        usage.triangleButton,
+        usage.starButton,
+        usage.heartButton,
+        usage.roundedButton,
+        usage.iconButton,
+        usage.svgButton,
+        usage.pngButton,
+        usage.jsonButton,
+        usage.pathButton,
+      ]) {
+        expect(
+          (button(controller) as RevealThemeButton).revealShape,
+          isA<RevealShape>(),
+        );
+      }
+      await controller.flush();
+      await tester.pumpWidget(const SizedBox.shrink());
+      controller.dispose();
+    },
+  );
+
+  test('usage storage adapter restores and writes theme preferences', () async {
+    String? saved = 'dark';
+    final storage = usage.AppThemeStorage(
+      load: () async => saved,
+      save: (value) async => saved = value,
+    );
+    final controller = await usage.restoreTheme(storage);
+    expect(controller.themeMode, ThemeMode.dark);
+    controller.resetToSystem();
+    await controller.flush();
+    expect(saved, 'system');
+    saved = 'invalid';
+    await usage.refreshTheme(controller);
+    expect(controller.themeMode, ThemeMode.system);
+    controller.dispose();
   });
 
   test('custom storage recipe persists for its session', () async {

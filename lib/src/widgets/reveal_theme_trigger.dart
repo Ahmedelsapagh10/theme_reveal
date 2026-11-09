@@ -10,6 +10,15 @@ import '../shapes/reveal_shape.dart';
 
 /// Makes arbitrary visual content an accessible theme toggle. The trigger owns
 /// activation; interactive children are treated as decoration to avoid two taps.
+///
+/// ```dart
+/// // Use below your app viewport; reuse the controller created in main().
+/// RevealThemeTrigger(
+///   controller: controller,
+///   semanticLabel: 'Change appearance',
+///   child: const Chip(avatar: Icon(Icons.contrast), label: Text('Appearance')),
+/// )
+/// ```
 class RevealThemeTrigger extends StatefulWidget {
   /// Wraps child as a theme toggle; child input/semantics are decorative.
   const RevealThemeTrigger({

@@ -1,3 +1,13 @@
+## 0.1.1
+
+- Document direct widget and callback usage, with standalone managed, Cubit and
+  ValueNotifier app examples.
+- Expand managed and external usage recipes, including Cubit and
+  ValueNotifier state, screen placement, shapes, animation and programmatic control.
+- Add three-state selection, custom storage, migration and troubleshooting guidance.
+- Add API reference usage examples and keep README recipes compiled and checked.
+- No library behavior or dependency changes.
+
 ## 0.1.0
 
 - Persistent light, dark and system modes, restored before the first frame;
@@ -14,5 +24,3 @@
 - macOS native pixel checks; Android, iOS, web and VoiceOver remain unverified.
   Profile-mode performance is unmeasured; no FPS claim is made.
 - Removed the generated Calculator scaffold. Import `theme_reveal_kit.dart`.
-
-Repository/homepage metadata still needs its real project URL before release.

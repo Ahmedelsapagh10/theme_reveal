@@ -1,4 +1,4 @@
-// README Dart blocks are copied verbatim from these marked regions.
+// Additional widget and persistence examples.
 // snippet:quick_start
 import 'package:flutter/material.dart';
 import 'package:theme_reveal_kit/theme_reveal_kit.dart';

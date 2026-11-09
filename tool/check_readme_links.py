@@ -3,7 +3,8 @@
 import concurrent.futures,json,pathlib,re,subprocess,sys
 root=pathlib.Path(__file__).resolve().parents[1];text=(root/'README.md').read_text()
 repo='https://github.com/Ahmedelsapagh10/theme_reveal';raw='https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/'
-urls=set(re.findall(r'\]\(([^)]+)\)',text)+re.findall(r'<img[^>]+src="([^"]+)"',text))
+urls=set(re.findall(r'\]\(([^)]+)\)',text)+re.findall(r'<(?:img|a)[^>]+(?:src|href)="([^"]+)"',text))
+urls.update(re.findall(r'^https?://\S+|(?<=: )https?://\S+', (root/'pubspec.yaml').read_text(), re.M))
 anchors=set(re.sub(r'[^a-z0-9 -]','',x.lower()).replace(' ','-') for x in re.findall(r'^#{1,6} (.+)$',text,re.M))
 results=[]
 for url in sorted(urls):
@@ -16,7 +17,7 @@ for url in sorted(urls):
 if '--remote' in sys.argv:
  def check(row):
   if row['url'].startswith('http'):
-   p=subprocess.run(['curl','-L','-s','-o','/dev/null','-w','%{http_code}','--max-time','25',row['url']],capture_output=True,text=True)
+   p=subprocess.run(['curl','-I','-L','-s','-o','/dev/null','-w','%{http_code}','--max-time','25',row['url']],capture_output=True,text=True)
    row['http']=p.stdout or 'network-error'
   return row
  with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:results=list(executor.map(check,results))

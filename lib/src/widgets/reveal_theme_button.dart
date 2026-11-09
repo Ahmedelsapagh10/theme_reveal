@@ -74,6 +74,14 @@ class RevealButtonStyle {
 }
 
 /// A compact button; its decoration is independent of the reveal mask.
+///
+/// ```dart
+/// // Use below your app viewport; reuse the controller created in main().
+/// RevealThemeButton(
+///   controller: controller,
+///   revealShape: const RevealShape.star(points: 5, innerRadius: .45),
+/// )
+/// ```
 class RevealThemeButton extends StatefulWidget {
   /// Creates a compact controller-driven theme toggle with a circular mask by default.
   const RevealThemeButton({
