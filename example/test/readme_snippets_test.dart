@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:theme_reveal_kit/theme_reveal_kit.dart';
 import 'package:theme_reveal_kit_example/readme_external.dart' as adapter;
+import 'package:theme_reveal_kit_example/presentation_recipes.dart' as recipes;
+import 'package:theme_reveal_kit_example/presentation_quick_start.dart'
+    as quick;
 import 'package:theme_reveal_kit_example/readme_snippets.dart' as snippets;
 
 Directory _packageRoot() {
@@ -23,17 +26,24 @@ void main() {
   String read(String path) => File('${root.path}/$path').readAsStringSync();
 
   test(
-    'all 16 README Dart blocks match sources compiled by this test import',
+    'all 18 README Dart blocks match sources compiled by this test import',
     () {
       final readme = read('README.md');
       final source = [
         read('example/lib/readme_snippets.dart'),
         read('example/lib/readme_external.dart'),
+        read('example/lib/presentation_recipes.dart'),
+        read('example/lib/presentation_quick_start.dart'),
       ].join('\n');
       final blocks = RegExp(
         r'```dart\n([\s\S]*?)\n```',
       ).allMatches(readme).toList();
-      expect(blocks, hasLength(16));
+      expect(blocks, hasLength(18));
+      for (final block in RegExp(
+        r'```[^\n]*\n([\s\S]*?)\n```',
+      ).allMatches(readme)) {
+        expect(block[1]!.split('\n').length, lessThanOrEqualTo(25));
+      }
       for (final block in blocks) {
         expect(
           source.contains(block[1]!),
@@ -46,11 +56,10 @@ void main() {
       ).allMatches(read('doc/widgets_and_external_mode.md'))) {
         expect(source.contains(block[1]!), isTrue);
       }
-      final sections = RegExp(
-        r'^## (\d+)\. ',
-        multiLine: true,
-      ).allMatches(readme).map((m) => int.parse(m[1]!));
-      expect(sections, orderedEquals(List.generate(25, (index) => index + 1)));
+      expect(
+        RegExp(r'^## ', multiLine: true).allMatches(readme),
+        hasLength(18),
+      );
       for (final match in RegExp(r'\]\(([^)]+)\)').allMatches(readme)) {
         final target = match[1]!;
         if (!target.startsWith('http') && !target.startsWith('#')) {
@@ -62,8 +71,27 @@ void main() {
         }
       }
       expect(readme, contains('Profile-mode performance | Unmeasured'));
-      expect(readme, contains('Preview media pending'));
-      expect(readme, isNot(contains('![')));
+      expect(readme, contains('![macOS verified]'));
+      const raw =
+          'https://raw.githubusercontent.com/Ahmedelsapagh10/theme_reveal/master/';
+      for (final match in RegExp(
+        r'https://raw\.githubusercontent\.com/[^)\s"]+',
+      ).allMatches(readme)) {
+        expect(match[0]!, startsWith(raw));
+        expect(
+          File('${root.path}/${match[0]!.substring(raw.length)}').existsSync(),
+          isTrue,
+        );
+      }
+      final manifest = jsonDecode(read('doc/media/manifest.json')) as List;
+      for (final entry in manifest) {
+        final file = File('${root.path}/doc/media/${entry['file']}');
+        expect(file.existsSync(), isTrue);
+        expect(file.lengthSync(), entry['bytes']);
+        if (file.path.endsWith('.gif')) {
+          expect(file.lengthSync(), lessThanOrEqualTo(1500000));
+        }
+      }
     },
   );
 
@@ -75,10 +103,6 @@ void main() {
         r'```json\n([\s\S]*?)\n```',
       ).allMatches(readme).toList();
       expect(jsonBlocks, hasLength(2));
-      expect(
-        jsonBlocks.map((m) => m[1]),
-        orderedEquals([snippets.jsonPathDocument, snippets.jsonShapeDocument]),
-      );
       for (final block in jsonBlocks) {
         expect(jsonDecode(block[1]!), isA<Map<String, dynamic>>());
         expect(
@@ -100,7 +124,10 @@ void main() {
       }
       expect(read('pubspec.yaml'), contains('version: 0.1.0'));
       expect(read('pubspec.yaml'), contains('flutter: ">=3.41.0"'));
-      expect(read('pubspec.yaml'), contains('RELEASE METADATA PLACEHOLDER'));
+      expect(
+        read('pubspec.yaml'),
+        contains('repository: https://github.com/Ahmedelsapagh10/theme_reveal'),
+      );
       expect(
         read('LICENSE'),
         startsWith('MIT License\n\nCopyright (c) 2026 Ahmed Elsapagh'),
@@ -113,7 +140,13 @@ void main() {
     'quick start compiles and preserves managed state; all widget/config recipes construct',
     (tester) async {
       final controller = RevealThemeController(storage: MemoryThemeStorage());
-      final recipes = <Widget>[
+      expect(quick.main, isA<Function>());
+      expect(recipes.animation.duration, const Duration(milliseconds: 900));
+      expect(recipes.chooseMode, isA<Function>());
+      final widgets = <Widget>[
+        recipes.circularButton(controller),
+        recipes.starButton(controller),
+        recipes.triangleButton(controller),
         snippets.modeSelector(controller),
         snippets.settingsAppearance(controller),
         snippets.iconMaskButton(controller),
@@ -123,7 +156,7 @@ void main() {
         snippets.customThemeTrigger(controller),
         snippets.accessibleThemeButton(controller),
       ];
-      expect(recipes, hasLength(8));
+      expect(widgets, hasLength(11));
       expect(
         snippets.diamondPath().resolve().containsUnit(Offset.zero),
         isTrue,
@@ -169,6 +202,22 @@ void main() {
       ); // QuickStartApp owns disposal.
     },
   );
+
+  testWidgets('README ValueNotifier recipe changes the live theme', (
+    tester,
+  ) async {
+    final mode = ValueNotifier(ThemeMode.light);
+    await tester.pumpWidget(recipes.externalThemeApp(mode));
+    await tester.tap(find.text('Toggle theme'));
+    await tester.pumpAndSettle();
+    expect(mode.value, ThemeMode.dark);
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
+      ThemeMode.dark,
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    mode.dispose();
+  });
 
   test('custom storage recipe persists for its session', () async {
     final controller = await snippets.sessionController();

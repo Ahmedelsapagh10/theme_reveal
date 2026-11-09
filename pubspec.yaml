@@ -1,8 +1,8 @@
 name: theme_reveal_kit
 description: Persistent Flutter light, dark and system themes with circular, vector and alpha-mask reveals over a live application.
 version: 0.1.0
-# RELEASE METADATA PLACEHOLDER: replace this comment with the real URL before release.
-# repository: <YOUR_REAL_REPOSITORY_URL>
+repository: https://github.com/Ahmedelsapagh10/theme_reveal
+homepage: https://elsapagh.octopusteam.net/
 
 environment:
   sdk: ^3.11.0
@@ -19,6 +19,16 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+
+screenshots:
+  - description: Real macOS circular reveal from the Settings button, dark to light and back.
+    path: doc/media/hero.gif
+  - description: The compact theme button inside the actual Settings tab layout.
+    path: doc/media/settings_tab.png
+  - description: Rich Home tab content in the real light theme.
+    path: doc/media/home_light.png
+  - description: The same live Home tab in dark mode.
+    path: doc/media/home_dark.png
 
 topics:
   - theme

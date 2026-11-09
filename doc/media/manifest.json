@@ -1,0 +1,64 @@
+[
+  {
+    "file": "hero.gif",
+    "bytes": 487557,
+    "width": 800,
+    "fps": 15,
+    "palette": 96
+  },
+  {
+    "file": "shapes.gif",
+    "bytes": 689778,
+    "width": 800,
+    "fps": 15,
+    "palette": 96
+  },
+  {
+    "file": "logo_svg.gif",
+    "bytes": 608746,
+    "width": 800,
+    "fps": 15,
+    "palette": 96
+  },
+  {
+    "file": "logo_png.gif",
+    "bytes": 698374,
+    "width": 800,
+    "fps": 15,
+    "palette": 96
+  },
+  {
+    "file": "strategies.gif",
+    "bytes": 740006,
+    "width": 800,
+    "fps": 15,
+    "palette": 96
+  },
+  {
+    "file": "playground.gif",
+    "bytes": 1115532,
+    "width": 800,
+    "fps": 15,
+    "palette": 96
+  },
+  {
+    "file": "settings_tab.png",
+    "bytes": 51464
+  },
+  {
+    "file": "home_light.png",
+    "bytes": 63448
+  },
+  {
+    "file": "home_dark.png",
+    "bytes": 63216
+  },
+  {
+    "file": "persistence.gif",
+    "bytes": 504450,
+    "width": 800,
+    "fps": 15,
+    "palette": 96,
+    "edit": "Labeled cut between two actual OS processes"
+  }
+]

@@ -19,3 +19,11 @@
 
 # Local verification evidence; not part of the distributable package.
 /M7_RELEASE_REPORT.md
+
+# Local media QA and raw captures are not release artifacts.
+/MEDIA_PRESENTATION_REPORT.md
+/doc/media/preview*.html
+/doc/media/preview.png
+**/__pycache__/
+**/*.mov
+**/*.mp4
