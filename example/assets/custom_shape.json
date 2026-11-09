@@ -1,0 +1,16 @@
+{
+  "type": "path",
+  "viewBox": [
+    0,
+    0,
+    100,
+    100
+  ],
+  "paths": [
+    {
+      "d": "M50 3 L62 36 L97 37 L69 59 L79 94 L50 74 L21 94 L31 59 L3 37 L38 36 Z",
+      "fillRule": "nonZero",
+      "transform": "rotate(0 50 50)"
+    }
+  ]
+}

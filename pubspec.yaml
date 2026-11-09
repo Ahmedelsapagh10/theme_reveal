@@ -1,0 +1,31 @@
+name: theme_reveal_kit
+description: Persistent Flutter light, dark and system themes with circular, vector and alpha-mask reveals over a live application.
+version: 0.1.0
+# RELEASE METADATA PLACEHOLDER: replace this comment with the real URL before release.
+# repository: <YOUR_REAL_REPOSITORY_URL>
+
+environment:
+  sdk: ^3.11.0
+  flutter: ">=3.41.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  path_drawing: ^1.0.1
+  shared_preferences: ^2.5.6
+  xml: ^7.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+topics:
+  - theme
+  - dark-mode
+  - animation
+  - widgets
+  - persistence
+
+flutter:
+  uses-material-design: true

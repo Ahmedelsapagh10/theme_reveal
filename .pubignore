@@ -1,0 +1,21 @@
+# Generated state and local editor files, never package source.
+**/.dart_tool/
+**/build/
+**/.idea/
+**/.vscode/
+**/*.iml
+**/.DS_Store
+**/.metadata
+**/.flutter-plugins-dependencies
+**/*.log
+**/coverage/
+**/doc/api/
+**/Flutter/ephemeral/
+**/Pods/
+**/.symlinks/
+**/xcuserdata/
+**/.swiftpm/
+/pubspec.lock
+
+# Local verification evidence; not part of the distributable package.
+/M7_RELEASE_REPORT.md
